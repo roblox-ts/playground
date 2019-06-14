@@ -59,8 +59,9 @@ const LibManager = {
 			if (paths.length > 0) {
 				console.log(`${fileName} depends on ${paths.join(", ")}`);
 				for (const path of paths) {
-					console.log("path", path);
-					await this._addCoreLib(path, stripNoDefaultLib, followReferences);
+					if (!path.startsWith("..")) {
+						await this._addCoreLib(path, stripNoDefaultLib, followReferences);
+					}
 				}
 			}
 		}
@@ -125,8 +126,6 @@ async function main() {
 		return acc;
 	}, {});
 
-	console.log("Url defaults", urlDefaults);
-
 	const compilerOptions = Object.assign({}, defaultCompilerOptions, urlDefaults);
 
 	const sharedEditorOptions = {
@@ -184,24 +183,6 @@ async function main() {
 			setTimeout(() => {
 				node.classList.toggle("flash--hidden", true);
 			}, 1000);
-		},
-
-		fetchTooltips: async function() {
-			try {
-				this.toggleSpinner(true);
-				const res = await fetch(`${window.CONFIG.baseUrl}schema/tsconfig.json`);
-				const json = await res.json();
-				this.toggleSpinner(false);
-
-				for (const [propertyName, property] of Object.entries(
-					json.definitions.compilerOptionsDefinition.properties.compilerOptions.properties
-				)) {
-					this.tooltips[propertyName] = property.description;
-				}
-			} catch (e) {
-				console.error(e);
-				// not critical
-			}
 		},
 
 		toggleSpinner(shouldShow) {
@@ -316,7 +297,7 @@ async function main() {
 
 			return `
 const message: string = 'hello world';
-console.log(message);
+print(message);
 	`.trim();
 		}
 	};
@@ -335,43 +316,31 @@ console.log(message);
 
 	State.inputModel = monaco.editor.createModel(UI.getInitialCode(), "typescript", createFile(compilerOptions));
 
-	State.outputModel = monaco.editor.createModel("", "javascript", monaco.Uri.file("output.js"));
+	State.outputModel = monaco.editor.createModel("", "lua", monaco.Uri.file("output.lua"));
 
 	inputEditor = monaco.editor.create(
 		document.getElementById("input"),
-		Object.assign(
-			{
-				model: State.inputModel
-			},
-			sharedEditorOptions
-		)
+		Object.assign({ model: State.inputModel }, sharedEditorOptions)
 	);
 
 	outputEditor = monaco.editor.create(
 		document.getElementById("output"),
-		Object.assign(
-			{
-				language: "lua",
-				model: State.outputModel
-			},
-			sharedEditorOptions
-		)
+		Object.assign({ model: State.outputModel }, sharedEditorOptions)
 	);
 
 	function updateOutput() {
-		monaco.languages.typescript.getTypeScriptWorker().then(worker => {
-			worker(State.inputModel.uri).then((client, a) => {
-				if (typeof window.client === "undefined") {
-					// expose global
-					window.client = client;
-					UI.console();
-				}
-
-				client.getEmitOutput(State.inputModel.uri.toString()).then(result => {
-					State.outputModel.setValue("-- lua output");
-				});
-			});
-		});
+		try {
+			const tsSource = State.inputModel.getValue();
+			let luaSource;
+			try {
+				luaSource = compileSource(tsSource);
+			} catch (e) {
+				luaSource = `--[[\n${e.toString().replace(/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/g, "")}\n]]`;
+			}
+			State.outputModel.setValue(luaSource);
+		} catch (e) {
+			console.log("e", e);
+		}
 
 		if (UI.shouldUpdateHash) {
 			UI.updateURL();
@@ -379,8 +348,6 @@ console.log(message);
 	}
 
 	UI.setCodeFromHash();
-
-	UI.fetchTooltips().then(() => {});
 
 	updateOutput();
 	inputEditor.onDidChangeModelContent(() => {
@@ -444,6 +411,10 @@ console.log(message);
 
 			const formatResult = prettier.formatWithCursor(State.inputModel.getValue(), {
 				parser: parsers.typescript.parse,
+				printWidth: 120,
+				tabWidth: 4,
+				useTabs: true,
+				trailingComma: "all",
 				cursorOffset
 			});
 

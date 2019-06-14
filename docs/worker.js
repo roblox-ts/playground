@@ -9,7 +9,4 @@ if (!version) {
 self.MonacoEnvironment = {
 	baseUrl: `https://unpkg.com/monaco-editor@${version}/min`
 };
-importScripts(
-	`https://unpkg.com/monaco-editor@${version}/min/vs/base/worker/workerMain.js`,
-	`https://unpkg.com/roblox-ts@0.1.10/out/index.js?module`
-);
+importScripts(`https://unpkg.com/monaco-editor@${version}/min/vs/base/worker/workerMain.js`);
