@@ -258,36 +258,13 @@ async function main() {
 			}
 		},
 
-		updateCompileOptions(name, value) {
-			console.log(`${name} = ${value}`);
-
-			Object.assign(compilerOptions, {
-				[name]: value
-			});
-
-			console.log("Updaring compiler options to", compilerOptions);
-			monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
-
-			let inputCode = inputEditor.getValue();
-			State.inputModel.dispose();
-			State.inputModel = monaco.editor.createModel(inputCode, "typescript", createFile(compilerOptions));
-			inputEditor.setModel(State.inputModel);
-
-			UI.refreshOutput();
-
-			UI.updateURL();
-		},
-
 		getInitialCode() {
 			if (location.hash.startsWith("#code")) {
 				const code = location.hash.replace("#code/", "").trim();
 				return LZString.decompressFromEncodedURIComponent(code);
 			}
 
-			return `
-const message: string = 'hello world';
-print(message);
-	`.trim();
+			UI.selectExample("lava");
 		}
 	};
 
@@ -339,24 +316,17 @@ print(message);
 	UI.setCodeFromHash();
 
 	updateOutput();
+
+	let timer;
 	inputEditor.onDidChangeModelContent(() => {
-		updateOutput();
+		if (timer !== undefined) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			updateOutput();
+		}, 300);
 	});
 	UI.shouldUpdateHash = true;
-
-	/* Run */
-
-	function runJavaScript() {
-		console.clear();
-		// to hide the stack trace
-		setTimeout(() => {
-			eval(State.outputModel.getValue());
-		}, 0);
-	}
-
-	inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runJavaScript);
-
-	outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runJavaScript);
 
 	inputEditor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, prettier);
 
@@ -374,16 +344,6 @@ print(message);
 						alert(e);
 					}
 				);
-			}
-
-			if (
-				event.keyCode === 13 &&
-				(event.metaKey || event.ctrlKey) &&
-				event.target instanceof Node &&
-				event.target === document.body
-			) {
-				event.preventDefault();
-				runJavaScript();
 			}
 		},
 		false
