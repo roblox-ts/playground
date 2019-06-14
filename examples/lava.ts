@@ -2,7 +2,7 @@ export {};
 
 const CollectionService = game.GetService("CollectionService");
 
-CollectionService.GetTagged("Lava").forEach(obj => {
+for (const obj of CollectionService.GetTagged("Lava")) {
 	if (obj.IsA("BasePart")) {
 		obj.Touched.Connect(part => {
 			const character = part.Parent;
@@ -14,4 +14,4 @@ CollectionService.GetTagged("Lava").forEach(obj => {
 			}
 		});
 	}
-});
+}
