@@ -38,10 +38,10 @@ fi
 
 popd
 
-mkdir -vp ./public/monaco-typescript/${INSTALLED_VERSION}
-cp -vr ./monaco-typescript/release/min/ ./public/monaco-typescript/${INSTALLED_VERSION}
+mkdir -vp ./docs/monaco-typescript/${INSTALLED_VERSION}
+cp -vr ./monaco-typescript/release/min/ ./docs/monaco-typescript/${INSTALLED_VERSION}
 
-echo "window.localTSVersion = { '$INSTALLED_VERSION': { monaco: '$MONACO_VERSION', lib: '/monaco-typescript/$INSTALLED_VERSION' } }" > public/env.js
+echo "window.localTSVersion = { '$INSTALLED_VERSION': { monaco: '$MONACO_VERSION', lib: '/monaco-typescript/$INSTALLED_VERSION' } }" > docs/env.js
 
 echo
 echo "Added typescript version '$INSTALLED_VERSION' with monaco version '$MONACO_VERSION'. Make sure they are compatible!"

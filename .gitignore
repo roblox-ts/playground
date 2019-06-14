@@ -1,5 +1,5 @@
 node_modules
 monaco-typescript
-public/schema/*
-!public/schema/.gitkeep
-public/env.js
+docs/schema/*
+!docs/schema/.gitkeep
+docs/env.js
