@@ -291,7 +291,7 @@ async function main() {
 
 	outputEditor = monaco.editor.create(
 		document.getElementById("output"),
-		Object.assign({ model: State.outputModel }, sharedEditorOptions)
+		Object.assign({ model: State.outputModel, readOnly: true }, sharedEditorOptions)
 	);
 
 	function updateOutput() {
