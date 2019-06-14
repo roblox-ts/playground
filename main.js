@@ -203,7 +203,8 @@ async function main() {
 		selectExample: async function(exampleName) {
 			try {
 				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}.ts`);
-				const code = await res.text();
+				let code = await res.text();
+				code = code.replace(/export {\s*};/g, "");
 				UI.shouldUpdateHash = false;
 				State.inputModel.setValue(code.trim());
 				location.hash = `example/${exampleName}`;
