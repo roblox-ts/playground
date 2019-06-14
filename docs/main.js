@@ -344,20 +344,6 @@ print(message);
 	});
 	UI.shouldUpdateHash = true;
 
-	/* Run */
-
-	function runJavaScript() {
-		console.clear();
-		// to hide the stack trace
-		setTimeout(() => {
-			eval(State.outputModel.getValue());
-		}, 0);
-	}
-
-	inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runJavaScript);
-
-	outputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runJavaScript);
-
 	inputEditor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, prettier);
 
 	// if the focus is outside the editor
@@ -374,16 +360,6 @@ print(message);
 						alert(e);
 					}
 				);
-			}
-
-			if (
-				event.keyCode === 13 &&
-				(event.metaKey || event.ctrlKey) &&
-				event.target instanceof Node &&
-				event.target === document.body
-			) {
-				event.preventDefault();
-				runJavaScript();
 			}
 		},
 		false
