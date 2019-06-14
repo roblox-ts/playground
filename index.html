@@ -9,7 +9,7 @@
 	</head>
 
 	<body>
-		<script src="env.js"></script>
+		<script src="bundle.js"></script>
 		<script src="https://unpkg.com/url-search-params@1.1.0/build/url-search-params.js"></script>
 		<script src="https://unpkg.com/clipboard-polyfill@2.4.7/build/clipboard-polyfill.js"></script>
 		<script src="https://unpkg.com/monaco-editor@0.15.6/min/vs/loader.js"></script>
@@ -29,11 +29,6 @@
 
 				extraLibs: [
 					"https://unpkg.com/@rbxts/types@1.0.210/include/roblox.d.ts",
-					// "https://unpkg.com/@rbxts/types@1.0.210/include/generated/PluginSecurity.d.ts",
-					// "https://unpkg.com/@rbxts/types@1.0.210/include/generated/enums.d.ts",
-					// "https://unpkg.com/@rbxts/types@1.0.210/include/es.d.ts",
-					// "https://unpkg.com/@rbxts/types@1.0.210/include/lua.d.ts",
-					// "https://unpkg.com/@rbxts/types@1.0.210/include/macro_math.d.ts",
 				],
 
 				baseUrl: location.protocol + "//" + location.host + location.pathname,
@@ -70,7 +65,6 @@
 			};
 
 			window.CONFIG.TSVersion = window.CONFIG.getLatestVersion();
-			console.log("window.CONFIG", window.CONFIG);
 
 			if (params.has("ts")) {
 				window.CONFIG.useTSVersion(params.get("ts"));
@@ -111,11 +105,7 @@
 					<p class="popup-header">Examples</p>
 					<div class="popup" style="min-width: 20em;">
 						<ul>
-							<li class="button" data-example="classic-javascript">
-								Classic JavaScript
-							</li>
-							<li class="button" data-example="adding-types">Adding Types</li>
-							<li class="button" data-example="using-classes">Using Classes</li>
+							<li class="button" data-example="lava">Lava</li>
 						</ul>
 					</div>
 				</div>
