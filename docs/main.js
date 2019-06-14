@@ -2,8 +2,23 @@
 
 const LibManager = {
 	libs: {},
+	loaded: new Set(),
 
 	coreLibPath: `https://unpkg.com/@rbxts/types@1.0.210/include/`,
+
+	joinPath(...parts) {
+		let result = [];
+		for (const part of parts) {
+			for (const subPart of part.split("/").filter(v => v.length > 0)) {
+				if (subPart == "..") {
+					result.pop();
+				} else {
+					result.push(subPart);
+				}
+			}
+		}
+		return result.join("/");
+	},
 
 	getReferencePaths(input) {
 		const rx = /<reference path="([^"]+)"\s\/>/;
@@ -25,52 +40,46 @@ const LibManager = {
 		return parts[parts.length - 1];
 	},
 
-	addLib: async function(path, ...args) {
-		if (path.indexOf("http") === 0) {
-			return this._addRemoteLib(path, ...args);
-		}
-		return this._addCoreLib(path, ...args);
+	dirname(url) {
+		return url.slice(this.coreLibPath.length, url.length - this.basename(url).length);
 	},
 
-	_addCoreLib: async function(fileName, ...args) {
-		return this._addRemoteLib(`${this.coreLibPath}${fileName}`, ...args);
-	},
-
-	_addRemoteLib: async function(url, stripNoDefaultLib = false, followReferences = true) {
+	addLib: async function(path) {
+		const url = this.coreLibPath + path;
 		const fileName = this.basename(url);
 
-		if (this.libs[fileName]) {
+		if (this.loaded.has(path)) {
 			return;
 		}
+		this.loaded.add(path);
 
 		UI.toggleSpinner(true);
-		const res = await fetch(url);
-		if (res.status === 404) {
-			console.log(`Check https://unpkg.com/typescript@${window.CONFIG.TSVersion}/lib/`);
-		}
-		const rawText = await res.text();
 
-		UI.toggleSpinner(false);
-
-		const text = stripNoDefaultLib ? rawText.replace('/// <reference no-default-lib="true"/>', "") : rawText;
-
-		if (followReferences) {
-			const paths = this.getReferencePaths(text);
-			if (paths.length > 0) {
-				console.log(`${fileName} depends on ${paths.join(", ")}`);
-				for (const path of paths) {
-					if (!path.startsWith("..")) {
-						await this._addCoreLib(path, stripNoDefaultLib, followReferences);
-					}
-				}
+		let text = "";
+		for (let i = 0; i < 3; i++) {
+			const res = await fetch(url);
+			if (res.status === 404) {
+				console.log(`Failed to load "${path}" ( Attempt #${i} )`);
+			} else {
+				text = await res.text();
+				break;
 			}
 		}
 
+		UI.toggleSpinner(false);
+
+		const paths = this.getReferencePaths(text);
+		if (paths.length > 0) {
+			console.log(`${fileName} depends on ${paths.join(", ")}`);
+			for (const path of paths) {
+				await this.addLib(this.joinPath(this.dirname(url), path));
+			}
+		}
+
+		registerLib(fileName, text);
 		const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(text, fileName);
 
-		console.groupCollapsed(`Added '${fileName}'`);
-		console.log(text);
-		console.groupEnd();
+		console.log(`Added "${fileName}"`);
 
 		this.libs[fileName] = lib;
 
@@ -141,26 +150,6 @@ async function main() {
 	};
 
 	let inputEditor, outputEditor;
-
-	function createSelect(obj, globalPath, title, compilerOption) {
-		return `<label class="select">
-		<span class="select-label">${title}</span>
-	<select onchange="console.log(event.target.value); UI.updateCompileOptions('${compilerOption}', ${globalPath}[event.target.value]);">
-	${Object.keys(obj)
-		.filter(key => isNaN(Number(key)))
-		.map(key => {
-			if (key === "Latest") {
-				// hide Latest
-				return "";
-			}
-
-			const isSelected = obj[key] === compilerOptions[compilerOption];
-
-			return `<option ${isSelected ? "selected" : ""} value="${key}">${key}</option>`;
-		})}
-	</select>
-	</label>`;
-	}
 
 	function createFile(compilerOptions) {
 		return monaco.Uri.file(
@@ -333,7 +322,7 @@ print(message);
 			const tsSource = State.inputModel.getValue();
 			let luaSource;
 			try {
-				luaSource = compileSource(tsSource);
+				luaSource = compileSource("export {};\n" + tsSource);
 			} catch (e) {
 				luaSource = `--[[\n${e.toString().replace(/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/g, "")}\n]]`;
 			}
