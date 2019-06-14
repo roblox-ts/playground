@@ -258,36 +258,13 @@ async function main() {
 			}
 		},
 
-		updateCompileOptions(name, value) {
-			console.log(`${name} = ${value}`);
-
-			Object.assign(compilerOptions, {
-				[name]: value
-			});
-
-			console.log("Updaring compiler options to", compilerOptions);
-			monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
-
-			let inputCode = inputEditor.getValue();
-			State.inputModel.dispose();
-			State.inputModel = monaco.editor.createModel(inputCode, "typescript", createFile(compilerOptions));
-			inputEditor.setModel(State.inputModel);
-
-			UI.refreshOutput();
-
-			UI.updateURL();
-		},
-
 		getInitialCode() {
 			if (location.hash.startsWith("#code")) {
 				const code = location.hash.replace("#code/", "").trim();
 				return LZString.decompressFromEncodedURIComponent(code);
 			}
 
-			return `
-const message: string = 'hello world';
-print(message);
-	`.trim();
+			UI.selectExample("lava");
 		}
 	};
 
@@ -339,8 +316,15 @@ print(message);
 	UI.setCodeFromHash();
 
 	updateOutput();
+
+	let timer;
 	inputEditor.onDidChangeModelContent(() => {
-		updateOutput();
+		if (timer !== undefined) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			updateOutput();
+		}, 300);
 	});
 	UI.shouldUpdateHash = true;
 
