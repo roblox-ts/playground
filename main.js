@@ -4,7 +4,7 @@ const LibManager = {
 	libs: {},
 	loaded: new Set(),
 
-	coreLibPath: `https://unpkg.com/@rbxts/types@1.0.210/include/`,
+	coreLibPath: `https://unpkg.com/@rbxts/types@latest/include/`,
 
 	joinPath(...parts) {
 		let result = [];
