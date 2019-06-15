@@ -18,3 +18,4 @@ script:
   - git add -A
   - git diff-index --quiet HEAD || git commit -m "Update roblox-ts";
   - git push https://${GIT_TOKEN}@github.com/roblox-ts/playground.git
+  - npm run deploy
