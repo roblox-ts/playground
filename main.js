@@ -318,6 +318,15 @@ async function main() {
 
 	updateOutput();
 
+	let timer;
+	inputEditor.onDidChangeModelContent(() => {
+		if (timer !== undefined) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => {
+			updateOutput();
+		}, 300);
+	});
 	UI.shouldUpdateHash = true;
 
 	inputEditor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KEY_F, prettier);
@@ -336,9 +345,6 @@ async function main() {
 						alert(e);
 					}
 				);
-			} else if (event.keyCode == 13 && (event.metaKey || event.ctrlKey)) {
-				event.preventDefault();
-				updateOutput();
 			}
 		},
 		false

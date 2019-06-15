@@ -1,7 +1,5 @@
 export {};
 
-// Press Ctrl + Enter to compile!
-
 const CollectionService = game.GetService("CollectionService");
 
 for (const obj of CollectionService.GetTagged("Lava")) {
