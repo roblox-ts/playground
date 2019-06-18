@@ -14,12 +14,12 @@ module.exports = {
 		module: "empty"
 	},
 	externals: {
-		"cross-spawn": "empty",
-		"fs-extra": "empty",
-		chokidar: "empty",
-		klaw: "empty",
-		luamin: "empty",
-		yargs: "empty"
+		"cross-spawn": "{}",
+		"fs-extra": "{}",
+		chokidar: "{}",
+		klaw: "{}",
+		luamin: "{}",
+		yargs: "{}"
 	},
 	performance: { hints: false },
 	mode: "production"
