@@ -1,4 +1,4 @@
-// whoa, no typescript and no compilation!
+const worker = new Worker("bundle.js");
 
 const LibManager = {
 	libs: {},
@@ -76,7 +76,12 @@ const LibManager = {
 			}
 		}
 
-		registerLib(fileName, text);
+		worker.postMessage({
+			type: "library",
+			name: fileName,
+			source: text
+		});
+
 		const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(text, fileName);
 
 		console.log(`Added "${fileName}"`);
@@ -296,23 +301,20 @@ async function main() {
 	);
 
 	function updateOutput() {
-		try {
-			const tsSource = State.inputModel.getValue();
-			let luaSource;
-			try {
-				luaSource = compileSource("export {};\n" + tsSource);
-			} catch (e) {
-				luaSource = `--[[\n${e.toString().replace(/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/g, "")}\n]]`;
-			}
-			State.outputModel.setValue(luaSource);
-		} catch (e) {
-			console.log("e", e);
-		}
+		const tsSource = State.inputModel.getValue();
+		worker.postMessage({
+			type: "compile",
+			source: tsSource
+		});
 
 		if (UI.shouldUpdateHash) {
 			UI.updateURL();
 		}
 	}
+
+	worker.addEventListener("message", e => {
+		State.outputModel.setValue(e.data.source);
+	});
 
 	UI.setCodeFromHash();
 
