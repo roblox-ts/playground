@@ -327,7 +327,7 @@ async function main() {
 		}
 		timer = setTimeout(() => {
 			updateOutput();
-		}, 300);
+		}, 50);
 	});
 	UI.shouldUpdateHash = true;
 
