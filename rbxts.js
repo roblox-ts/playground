@@ -8,7 +8,12 @@ addEventListener("message", e => {
 		try {
 			luaSource = project.compileSource("export {};\n" + e.data.source);
 		} catch (e) {
-			luaSource = `--[[\n${e.toString().replace(/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/g, "")}\n]]`;
+			luaSource = e
+				.toString()
+				.replace(/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/g, "")
+				.split("\n")
+				.map(v => `-- ${v}`)
+				.join("\n");
 		}
 		postMessage({
 			source: luaSource
