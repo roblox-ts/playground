@@ -19,7 +19,9 @@ module.exports = {
 		chokidar: "{}",
 		klaw: "{}",
 		luamin: "{}",
-		yargs: "{}"
+		yargs: "{}",
+		"universal-analytics": "{}",
+		uuid: "{}"
 	},
 	performance: { hints: false },
 	mode: "production"
