@@ -2,6 +2,8 @@ import { Project } from "roblox-ts";
 
 const project = new Project();
 
+process.env.CI = "true";
+
 addEventListener("message", e => {
 	if (e.data.type === "compile") {
 		let luaSource;
