@@ -17,7 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "roblox-ts": "^0.2.3",
+    "roblox-ts": "^0.2.14",
     "serve": "^6.5.3"
   },
   "devDependencies": {
