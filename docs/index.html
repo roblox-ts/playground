@@ -17,15 +17,10 @@
 			const params = new URLSearchParams(location.search);
 
 			window.CONFIG = {
-				availableTSVersions: Object.assign(
-					{},
-					window.localTSVersion || {},
-					{
-						// https://unpkg.com/monaco-editor/
-						"3.5.1": { monaco: "0.17.0" },
-					},
-					{},
-				),
+				availableTSVersions: {
+					// https://unpkg.com/monaco-editor/
+					"3.6.2": { monaco: "0.17.1" },
+				},
 
 				extraLibs: [ "roblox.d.ts" ],
 
