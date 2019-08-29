@@ -19,7 +19,10 @@ module.exports = {
 		chokidar: "{}",
 		klaw: "{}",
 		luamin: "{}",
-		yargs: "{}"
+		net: "{}",
+		tls: "{}",
+		yargs: "{}",
+		"@microsoft/typescript-etw": "new Proxy({}, { get: () => () => {} })"
 	},
 	performance: { hints: false },
 	mode: "production"
