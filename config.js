@@ -22,7 +22,9 @@ module.exports = {
 		net: "{}",
 		tls: "{}",
 		yargs: "{}",
-		"@microsoft/typescript-etw": "new Proxy({}, { get: () => () => {} })"
+		"@microsoft/typescript-etw": "new Proxy({}, { get: () => () => {} })",
+		"universal-analytics": "{}",
+		uuid: "{}"
 	},
 	performance: { hints: false },
 	mode: "production"
