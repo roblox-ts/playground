@@ -1,10 +1,12 @@
 const worker = new Worker("bundle.js");
 
+const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@latest";
+
 const LibManager = {
 	libs: {},
 	loaded: new Set(),
 
-	coreLibPath: `https://unpkg.com/@rbxts/types@latest/include/`,
+	coreLibPath: `${CORE_LIB_BASE}/include/`,
 
 	joinPath(...parts) {
 		let result = [];
@@ -279,6 +281,11 @@ async function main() {
 			return `worker.js?version=${window.CONFIG.getMonacoVersion()}`;
 		}
 	};
+
+	const res = await fetch(`${CORE_LIB_BASE}/package.json`);
+	if (res.status === 200) {
+		console.log("@rbxts/types", JSON.parse(await res.text()).version);
+	}
 
 	for (const path of window.CONFIG.extraLibs) {
 		await LibManager.addLib(path);
