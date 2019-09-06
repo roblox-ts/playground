@@ -17,63 +17,15 @@
 			const params = new URLSearchParams(location.search);
 
 			window.CONFIG = {
-				availableTSVersions: {
-					// https://unpkg.com/monaco-editor/
-					"3.6.2": { monaco: "0.18.0" },
-				},
-
+				monacoVersion: "0.18.0",
 				extraLibs: [ "roblox.d.ts" ],
-
 				baseUrl: location.protocol + "//" + location.host + location.pathname,
-
-				getLatestVersion() {
-					return Object.keys(this.availableTSVersions)
-						.sort()
-						.pop();
-				},
-
-				useTSVersion(version) {
-					if (this.availableTSVersions[version]) {
-						this.TSVersion = version;
-					} else {
-						alert(
-							`Version '${version}' is not available, using ${this.TSVersion}`,
-						);
-					}
-				},
-
-				getMonacoVersion() {
-					return this.availableTSVersions[this.TSVersion].monaco;
-				},
-
-				getAdditionalPaths() {
-					const lib = this.availableTSVersions[this.TSVersion].lib;
-
-					return lib
-						? {
-								"vs/language/typescript": `${this.baseUrl}${lib}`,
-							}
-						: {};
-				},
 			};
 
-			window.CONFIG.TSVersion = window.CONFIG.getLatestVersion();
-			const monacoVersion = window.CONFIG.getMonacoVersion();
-
-			console.log("TypeScript", window.CONFIG.TSVersion);
-			console.log("Monaco", monacoVersion);
-
-			if (params.has("ts")) {
-				window.CONFIG.useTSVersion(params.get("ts"));
-			}
+			console.log("Monaco", window.CONFIG.monacoVersion);
 
 			require.config({
-				paths: Object.assign(
-					{
-						vs: `https://unpkg.com/monaco-editor@${monacoVersion}/min/vs`,
-					},
-					window.CONFIG.getAdditionalPaths(),
-				),
+				paths: { vs: `https://unpkg.com/monaco-editor@${window.CONFIG.monacoVersion}/min/vs` },
 				ignoreDuplicateModules: ["vs/editor/editor.main"],
 			});
 		</script>

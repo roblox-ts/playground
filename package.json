@@ -4,14 +4,9 @@
   "description": "Better TypeScript playground",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "serve ./docs",
-    "setup": "npm run fetch-schema",
-    "clean": "rm -rf monaco-typescript && rm -rf docs/monaco-typescript",
-    "get-typescript": "./scripts/get-typescript.sh",
     "deploy": "gh-pages --dist=docs",
-    "build": "npx webpack --config ./config.js",
-    "fetch-schema": "curl http://json.schemastore.org/tsconfig > docs/schema/tsconfig.json"
+    "build": "npx webpack --config ./config.js"
   },
   "keywords": [],
   "author": "",
