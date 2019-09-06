@@ -58,6 +58,10 @@
 			};
 
 			window.CONFIG.TSVersion = window.CONFIG.getLatestVersion();
+			const monacoVersion = window.CONFIG.getMonacoVersion();
+
+			console.log("TypeScript", window.CONFIG.TSVersion);
+			console.log("Monaco", monacoVersion);
 
 			if (params.has("ts")) {
 				window.CONFIG.useTSVersion(params.get("ts"));
@@ -66,7 +70,7 @@
 			require.config({
 				paths: Object.assign(
 					{
-						vs: `https://unpkg.com/monaco-editor@${window.CONFIG.getMonacoVersion()}/min/vs`,
+						vs: `https://unpkg.com/monaco-editor@${monacoVersion}/min/vs`,
 					},
 					window.CONFIG.getAdditionalPaths(),
 				),
