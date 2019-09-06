@@ -185,28 +185,6 @@ async function main() {
 			document.querySelector(".spinner").classList.toggle("spinner--hidden", !shouldShow);
 		},
 
-		console() {
-			if (!window.ts) {
-				return;
-			}
-
-			console.log(`Using TypeScript ${window.ts.version}`);
-
-			console.log("Available globals:");
-			console.log("\twindow.ts", window.ts);
-			console.log("\twindow.client", window.client);
-		},
-
-		selectVersion(version) {
-			if (version === window.CONFIG.getLatestVersion()) {
-				location.href = `${window.CONFIG.baseUrl}${location.hash}`;
-				return false;
-			}
-
-			location.href = `${window.CONFIG.baseUrl}?ts=${version}${location.hash}`;
-			return false;
-		},
-
 		selectExample: async function(exampleName) {
 			try {
 				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}.ts`);
@@ -235,35 +213,8 @@ async function main() {
 		},
 
 		updateURL() {
-			const diff = Object.entries(defaultCompilerOptions).reduce((acc, [key, value]) => {
-				if (value !== compilerOptions[key]) {
-					acc[key] = compilerOptions[key];
-				}
-
-				return acc;
-			}, {});
-
 			const hash = `code/${LZString.compressToEncodedURIComponent(State.inputModel.getValue())}`;
-
-			const urlParams = Object.assign({}, diff);
-
-			["lib", "ts"].forEach(param => {
-				if (params.has(param)) {
-					urlParams[param] = params.get(param);
-				}
-			});
-
-			if (Object.keys(urlParams).length > 0) {
-				const queryString = Object.entries(urlParams)
-					.map(([key, value]) => {
-						return `${key}=${encodeURIComponent(value)}`;
-					})
-					.join("&");
-
-				window.history.replaceState({}, "", `${window.CONFIG.baseUrl}?${queryString}#${hash}`);
-			} else {
-				window.history.replaceState({}, "", `${window.CONFIG.baseUrl}#${hash}`);
-			}
+			window.history.replaceState({}, "", `${window.CONFIG.baseUrl}#${hash}`);
 		},
 
 		getInitialCode() {
@@ -271,14 +222,13 @@ async function main() {
 				const code = location.hash.replace("#code/", "").trim();
 				return LZString.decompressFromEncodedURIComponent(code);
 			}
-
 			UI.selectExample("lava");
 		}
 	};
 
 	window.MonacoEnvironment = {
 		getWorkerUrl: function(workerId, label) {
-			return `worker.js?version=${window.CONFIG.getMonacoVersion()}`;
+			return `worker.js?version=${window.CONFIG.monacoVersion}`;
 		}
 	};
 
