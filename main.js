@@ -1,9 +1,6 @@
 const worker = new Worker("bundle.js");
 
-// const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@latest";
-
-// FIXME: Force pre-Generator types while we wait for monaco-typescript to update
-const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@1.0.263";
+const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@latest";
 
 const LibManager = {
 	libs: {},
