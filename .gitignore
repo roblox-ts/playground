@@ -1,6 +1,3 @@
 node_modules
-monaco-typescript
-docs/schema/*
-!docs/schema/.gitkeep
-docs/env.js
 docs/examples/node_modules
+docs/bundle.js
