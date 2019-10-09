@@ -31,8 +31,8 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "noreply@github.com"
           npm install roblox-ts@latest
-          npm run build
           git add -A
           git diff-index --quiet HEAD || git commit -m "Update roblox-ts [skip ci]";
           git push https://${{ secrets.git_token }}@github.com/roblox-ts/playground.git HEAD:master
+          npm run build
           npx gh-pages --dist=docs -r https://${{ secrets.git_token }}@github.com/roblox-ts/playground.git
