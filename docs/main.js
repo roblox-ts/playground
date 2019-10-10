@@ -1,98 +1,95 @@
 const worker = new Worker("bundle.js");
 
 const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@latest";
+const CORE_LIB_PATH = `${CORE_LIB_BASE}/include/`;
 
-const LibManager = {
-	libs: {},
-	loaded: new Set(),
+const libs = {};
+const loaded = new Set();
 
-	coreLibPath: `${CORE_LIB_BASE}/include/`,
-
-	joinPath(...parts) {
-		let result = [];
-		for (const part of parts) {
-			for (const subPart of part.split("/").filter(v => v.length > 0)) {
-				if (subPart == "..") {
-					result.pop();
-				} else {
-					result.push(subPart);
-				}
-			}
-		}
-		return result.join("/");
-	},
-
-	getReferencePaths(input) {
-		const rx = /<reference path="([^"]+)"\s\/>/;
-		return (input.match(new RegExp(rx.source, "g")) || []).map(s => {
-			const match = s.match(rx);
-			if (match && match.length >= 2) {
-				return match[1];
+function joinPath(...parts) {
+	let result = [];
+	for (const part of parts) {
+		for (const subPart of part.split("/").filter(v => v.length > 0)) {
+			if (subPart == "..") {
+				result.pop();
 			} else {
-				throw new Error(`Error parsing: "${s}".`);
-			}
-		});
-	},
-
-	basename(url) {
-		const parts = url.split("/");
-		if (parts.length === 0) {
-			throw new Error(`Bad url: "${url}"`);
-		}
-		return parts[parts.length - 1];
-	},
-
-	dirname(url) {
-		return url.slice(this.coreLibPath.length, url.length - this.basename(url).length);
-	},
-
-	addLib: async function(path) {
-		const url = this.coreLibPath + path;
-		const fileName = this.basename(url);
-
-		if (this.loaded.has(path)) {
-			return;
-		}
-		this.loaded.add(path);
-
-		UI.toggleSpinner(true);
-
-		let text = "";
-		for (let i = 0; i < 3; i++) {
-			const res = await fetch(url);
-			if (res.status === 404) {
-				console.log(`Failed to load "${path}" ( Attempt #${i} )`);
-			} else {
-				text = await res.text();
-				break;
+				result.push(subPart);
 			}
 		}
-
-		UI.toggleSpinner(false);
-
-		const paths = this.getReferencePaths(text);
-		if (paths.length > 0) {
-			console.log(`${fileName} depends on ${paths.join(", ")}`);
-			for (const path of paths) {
-				await this.addLib(this.joinPath(this.dirname(url), path));
-			}
-		}
-
-		worker.postMessage({
-			type: "library",
-			name: fileName,
-			source: text
-		});
-
-		const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(text, fileName);
-
-		console.log(`Added "${fileName}"`);
-
-		this.libs[fileName] = lib;
-
-		return lib;
 	}
-};
+	return result.join("/");
+}
+
+function getReferencePaths(input) {
+	const rx = /<reference path="([^"]+)"\s\/>/;
+	return (input.match(new RegExp(rx.source, "g")) || []).map(s => {
+		const match = s.match(rx);
+		if (match && match.length >= 2) {
+			return match[1];
+		} else {
+			throw new Error(`Error parsing: "${s}".`);
+		}
+	});
+}
+
+function basename(url) {
+	const parts = url.split("/");
+	if (parts.length === 0) {
+		throw new Error(`Bad url: "${url}"`);
+	}
+	return parts[parts.length - 1];
+}
+
+function dirname(url) {
+	return url.slice(CORE_LIB_PATH.length, url.length - basename(url).length);
+}
+
+async function addLib(path) {
+	const url = CORE_LIB_PATH + path;
+	const fileName = basename(url);
+
+	if (loaded.has(path)) {
+		return;
+	}
+	loaded.add(path);
+
+	UI.toggleSpinner(true);
+
+	let text = "";
+	for (let i = 0; i < 3; i++) {
+		const res = await fetch(url);
+		if (res.status === 404) {
+			console.log(`Failed to load "${path}" ( Attempt #${i} )`);
+		} else {
+			text = await res.text();
+			break;
+		}
+	}
+
+	UI.toggleSpinner(false);
+
+	const paths = getReferencePaths(text);
+	if (paths.length > 0) {
+		console.log(`${fileName} depends on ${paths.join(", ")}`);
+		for (const path of paths) {
+			await addLib(joinPath(dirname(url), path));
+		}
+	}
+
+	worker.postMessage({
+		type: "library",
+		name: fileName,
+		source: text
+	});
+
+	const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(text, fileName);
+
+	console.log(`Added "${fileName}"`);
+
+	libs[fileName] = lib;
+
+	return lib;
+}
 
 async function main() {
 	const defaultCompilerOptions = {
@@ -156,7 +153,7 @@ async function main() {
 		outputModel: null
 	};
 
-	let inputEditor, outputEditor;
+	let inputEditor;
 
 	function createFile(compilerOptions) {
 		return monaco.Uri.file(
@@ -252,7 +249,7 @@ async function main() {
 		Object.assign({ model: State.inputModel }, sharedEditorOptions)
 	);
 
-	outputEditor = monaco.editor.create(
+	monaco.editor.create(
 		document.getElementById("output"),
 		Object.assign({ model: State.outputModel, readOnly: true }, sharedEditorOptions)
 	);
