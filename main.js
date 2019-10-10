@@ -235,7 +235,7 @@ async function main() {
 	}
 
 	for (const path of window.CONFIG.extraLibs) {
-		await LibManager.addLib(path);
+		await addLib(path);
 	}
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
