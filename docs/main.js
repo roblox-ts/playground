@@ -222,7 +222,7 @@ async function main() {
 	await addLib(
 		"https://unpkg.com/@rbxts/validate-tree@latest/init.d.ts",
 		"node_modules/@rbxts/validate-tree/index.d.ts",
-		"node_modules/@rbxts/validate-tree/index.d.ts"
+		"@rbxts/validate-tree/index.d.ts"
 	);
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
