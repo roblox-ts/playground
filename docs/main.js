@@ -225,6 +225,12 @@ async function main() {
 		"@rbxts/validate-tree/index.d.ts"
 	);
 
+	await addLib(
+		"https://unpkg.com/@rbxts/yield-for-character@latest/init.d.ts",
+		"node_modules/@rbxts/yield-for-character/index.d.ts",
+		"@rbxts/yield-for-character/index.d.ts"
+	);
+
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
 	State.inputModel = monaco.editor.createModel(UI.getInitialCode(), "typescript", createFile());
