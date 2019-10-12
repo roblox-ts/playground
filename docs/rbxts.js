@@ -21,6 +21,7 @@ addEventListener("message", e => {
 			source: luaSource
 		});
 	} else if (e.data.type === "library") {
-		project.project.createSourceFile(e.data.name, e.data.source);
+		const sourceFile = project.project.createSourceFile(e.data.path, e.data.source);
+		sourceFile.saveSync();
 	}
 });
