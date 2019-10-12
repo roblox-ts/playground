@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "@rbxts/services": "^1.0.28",
-    "@rbxts/types": "^1.0.211"
+    "@rbxts/types": "^1.0.211",
+    "@rbxts/validate-tree": "*",
+    "@rbxts/yield-for-character": "*"
   }
 }
