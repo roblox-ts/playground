@@ -1,6 +1,4 @@
-export {};
-
-const CollectionService = game.GetService("CollectionService");
+import { CollectionService } from "@rbxts/services";
 
 for (const obj of CollectionService.GetTagged("Lava")) {
 	if (obj.IsA("BasePart")) {
