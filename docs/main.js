@@ -92,6 +92,14 @@ async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
 	console.log(`Added "${fileName}"`);
 }
 
+async function addPackage(packageName, packageTypesUrl) {
+	await addLib(
+		packageTypesUrl,
+		`node_modules/@rbxts/${packageName}/index.d.ts`,
+		`@rbxts/${packageName}/index.d.ts`
+	);
+}
+
 async function main() {
 	const compilerOptions = {
 		allowNonTsExtensions: true,
@@ -207,35 +215,11 @@ async function main() {
 		await addCoreLib(path);
 	}
 
-	await addLib(
-		"https://unpkg.com/@rbxts/t@latest/lib/t.d.ts",
-		"node_modules/@rbxts/t/index.d.ts",
-		"@rbxts/t/index.d.ts"
-	);
-
-	await addLib(
-		"https://unpkg.com/@rbxts/services@latest/index.d.ts",
-		"node_modules/@rbxts/services/index.d.ts",
-		"@rbxts/services/index.d.ts"
-	);
-
-	await addLib(
-		"https://unpkg.com/@rbxts/validate-tree@latest/init.d.ts",
-		"node_modules/@rbxts/validate-tree/index.d.ts",
-		"@rbxts/validate-tree/index.d.ts"
-	);
-
-	await addLib(
-		"https://unpkg.com/@rbxts/yield-for-character@latest/init.d.ts",
-		"node_modules/@rbxts/yield-for-character/index.d.ts",
-		"@rbxts/yield-for-character/index.d.ts"
-	);
-
-	await addLib(
-		"https://unpkg.com/@rbxts/spr@latest/spr.d.ts",
-		"node_modules/@rbxts/spr/index.d.ts",
-		"@rbxts/spr/index.d.ts"
-	);
+	await addPackage("t", "https://unpkg.com/@rbxts/t@latest/lib/t.d.ts");
+	await addPackage("services", "https://unpkg.com/@rbxts/services@latest/index.d.ts");
+	await addPackage("validate-tree", "https://unpkg.com/@rbxts/validate-tree@latest/init.d.ts");
+	await addPackage("yield-for-character", "https://unpkg.com/@rbxts/yield-for-character@latest/init.d.ts");
+	await addPackage("spr", "https://unpkg.com/@rbxts/spr@latest/spr.d.ts");
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
