@@ -220,6 +220,7 @@ async function main() {
 	await addPackage("validate-tree", "https://unpkg.com/@rbxts/validate-tree@latest/init.d.ts");
 	await addPackage("yield-for-character", "https://unpkg.com/@rbxts/yield-for-character@latest/init.d.ts");
 	await addPackage("spr", "https://unpkg.com/@rbxts/spr@latest/spr.d.ts");
+	await addPackage("dumpster", "https://unpkg.com/browse/@rbxts/dumpster@latest/Dumpster.d.ts");
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
