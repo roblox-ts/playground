@@ -231,6 +231,12 @@ async function main() {
 		"@rbxts/yield-for-character/index.d.ts"
 	);
 
+	await addLib(
+		"https://unpkg.com/@rbxts/spr@latest/spr.d.ts",
+		"node_modules/@rbxts/spr/spr.d.ts",
+		"@rbxts/spr/spr.d.ts"
+	);
+
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
 	State.inputModel = monaco.editor.createModel(UI.getInitialCode(), "typescript", createFile());
