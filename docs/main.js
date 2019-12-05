@@ -233,8 +233,8 @@ async function main() {
 
 	await addLib(
 		"https://unpkg.com/@rbxts/spr@latest/spr.d.ts",
-		"node_modules/@rbxts/spr/spr.d.ts",
-		"@rbxts/spr/spr.d.ts"
+		"node_modules/@rbxts/spr/index.d.ts",
+		"@rbxts/spr/index.d.ts"
 	);
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
