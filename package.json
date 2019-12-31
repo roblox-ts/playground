@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "roblox-ts": "^0.2.14",
-    "serve": "^11.2.0"
+    "serve": "^11.3.0"
   },
   "devDependencies": {
     "gh-pages": "^2.1.1",
