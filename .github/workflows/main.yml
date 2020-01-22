@@ -12,20 +12,10 @@ jobs:
     if: github.repository == 'roblox-ts/playground' &&
         github.ref == 'refs/heads/master' &&
         contains(github.event.commits[0].message, '[skip ci]') == false
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@master
-
-      - name: Install NodeJS
-        uses: actions/setup-node@master
-        with:
-          node-version: 12.x
-
-      - name: Install node_modules
-        run: npm install
-
+      - run: npm install
       - name: Deploy
         run: |
           git config --global user.name "GitHub Actions"
