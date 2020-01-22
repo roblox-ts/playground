@@ -12,9 +12,9 @@ module.exports = {
 	node: {
 		fs: "empty",
 		module: "empty",
-		worker_threads: "empty",
 	},
 	externals: {
+		worker_threads: "{}",
 		"cross-spawn": "{}",
 		"fs-extra": "{}",
 		chokidar: "{}",
