@@ -3,9 +3,6 @@ const worker = new Worker("bundle.js");
 const CORE_LIB_BASE = "https://unpkg.com/@rbxts/types@latest";
 const CORE_LIB_PATH = `${CORE_LIB_BASE}/include/`;
 
-const libs = {};
-const loaded = new Set();
-
 function joinPath(...parts) {
 	let result = [];
 	for (const part of parts) {
@@ -44,14 +41,19 @@ function dirname(url) {
 	return url.slice(CORE_LIB_PATH.length, url.length - basename(url).length);
 }
 
-async function addLib(path) {
-	const url = CORE_LIB_PATH + path;
-	const fileName = basename(url);
+const loaded = new Set();
 
-	if (loaded.has(path)) {
+async function addCoreLib(path) {
+	return addLib(CORE_LIB_PATH + path, basename(path));
+}
+
+async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
+	const fileName = basename(rbxtsPath);
+
+	if (loaded.has(url)) {
 		return;
 	}
-	loaded.add(path);
+	loaded.add(url);
 
 	UI.toggleSpinner(true);
 
@@ -59,7 +61,7 @@ async function addLib(path) {
 	for (let i = 0; i < 3; i++) {
 		const res = await fetch(url);
 		if (res.status === 404) {
-			console.log(`Failed to load "${path}" ( Attempt #${i} )`);
+			console.log(`Failed to load "${fileName}" ( Attempt #${i} )`);
 		} else {
 			text = await res.text();
 			break;
@@ -68,78 +70,55 @@ async function addLib(path) {
 
 	UI.toggleSpinner(false);
 
-	const paths = getReferencePaths(text);
-	if (paths.length > 0) {
-		console.log(`${fileName} depends on ${paths.join(", ")}`);
-		for (const path of paths) {
-			await addLib(joinPath(dirname(url), path));
+	if (rbxtsPath === monacoPath) {
+		// hack?
+		const paths = getReferencePaths(text);
+		if (paths.length > 0) {
+			console.log(`${fileName} depends on ${paths.join(", ")}`);
+			for (const path of paths) {
+				await addCoreLib(joinPath(dirname(url), path));
+			}
 		}
 	}
 
 	worker.postMessage({
 		type: "library",
-		name: fileName,
+		path: rbxtsPath,
 		source: text
 	});
 
-	const lib = monaco.languages.typescript.typescriptDefaults.addExtraLib(text, fileName);
+	monaco.languages.typescript.typescriptDefaults.addExtraLib(text, monacoPath);
 
 	console.log(`Added "${fileName}"`);
+}
 
-	libs[fileName] = lib;
-
-	return lib;
+async function addPackage(packageName, packageTypesUrl) {
+	await addLib(
+		packageTypesUrl,
+		`node_modules/@rbxts/${packageName}/index.d.ts`,
+		`@rbxts/${packageName}/index.d.ts`
+	);
 }
 
 async function main() {
-	const defaultCompilerOptions = {
-		noImplicitAny: true,
-		strictNullChecks: true,
-		strictFunctionTypes: true,
-		strictPropertyInitialization: true,
-		noImplicitThis: true,
-		noImplicitReturns: true,
-
-		alwaysStrict: true,
-		allowUnreachableCode: false,
-		allowUnusedLabels: false,
-
+	const compilerOptions = {
+		allowNonTsExtensions: true,
+		allowSyntheticDefaultImports: true,
 		downlevelIteration: true,
-		noEmitHelpers: false,
+		module: monaco.languages.typescript.ModuleKind.CommonJS,
+		moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
 		noLib: true,
-		noStrictGenericChecks: false,
-		noUnusedLocals: false,
-		noUnusedParameters: false,
+		strict: true,
+		target: monaco.languages.typescript.ScriptTarget.ES2015,
+		typeRoots: ["node_modules/@rbxts"],
+		noEmit: true,
 
-		esModuleInterop: true,
-		preserveConstEnums: false,
-		removeComments: false,
-		skipLibCheck: false,
+		baseUrl: ".",
+		rootDir: ".",
 
-		experimentalDecorators: false,
-		emitDecoratorMetadata: false,
-
-		target: monaco.languages.typescript.ScriptTarget.ES2016,
-		jsx: monaco.languages.typescript.JsxEmit.React
+		jsx: monaco.languages.typescript.JsxEmit.React,
+		jsxFactory: "Roact.createElement"
 	};
-
-	const urlDefaults = Object.entries(defaultCompilerOptions).reduce((acc, [key, value]) => {
-		if (params.has(key)) {
-			const urlValue = params.get(key);
-
-			if (urlValue === "true") {
-				acc[key] = true;
-			} else if (urlValue === "false") {
-				acc[key] = false;
-			} else if (!isNaN(parseInt(urlValue, 10))) {
-				acc[key] = parseInt(params.get(key), 10);
-			}
-		}
-
-		return acc;
-	}, {});
-
-	const compilerOptions = Object.assign({}, defaultCompilerOptions, urlDefaults);
 
 	const sharedEditorOptions = {
 		minimap: { enabled: false },
@@ -155,10 +134,8 @@ async function main() {
 
 	let inputEditor;
 
-	function createFile(compilerOptions) {
-		return monaco.Uri.file(
-			"input." + (compilerOptions.jsx === monaco.languages.typescript.JsxEmit.None ? "ts" : "tsx")
-		);
+	function createFile() {
+		return monaco.Uri.file("input.tsx");
 	}
 
 	window.UI = {
@@ -235,14 +212,23 @@ async function main() {
 	}
 
 	for (const path of window.CONFIG.extraLibs) {
-		await addLib(path);
+		await addCoreLib(path);
 	}
+
+	await addPackage("t", "https://unpkg.com/@rbxts/t@latest/lib/t.d.ts");
+	await addPackage("services", "https://unpkg.com/@rbxts/services@latest/index.d.ts");
+	await addPackage("validate-tree", "https://unpkg.com/@rbxts/validate-tree@latest/init.d.ts");
+	await addPackage("yield-for-character", "https://unpkg.com/@rbxts/yield-for-character@latest/init.d.ts");
+	await addPackage("spr", "https://unpkg.com/@rbxts/spr@latest/spr.d.ts");
+	await addPackage("dumpster", "https://unpkg.com/@rbxts/dumpster@latest/Dumpster.d.ts");
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
-	State.inputModel = monaco.editor.createModel(UI.getInitialCode(), "typescript", createFile(compilerOptions));
+	State.inputModel = monaco.editor.createModel(UI.getInitialCode(), "typescript", createFile());
 
 	State.outputModel = monaco.editor.createModel("", "lua", monaco.Uri.file("output.lua"));
+
+	monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
 	inputEditor = monaco.editor.create(
 		document.getElementById("input"),
