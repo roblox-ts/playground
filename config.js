@@ -11,7 +11,8 @@ module.exports = {
 	},
 	node: {
 		fs: "empty",
-		module: "empty"
+		module: "empty",
+		worker_threads: "empty",
 	},
 	externals: {
 		"cross-spawn": "{}",
