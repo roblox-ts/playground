@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "roblox-ts": "^0.2.14",
+    "roblox-ts": "^0.3.0",
     "serve": "^11.3.0"
   },
   "devDependencies": {
