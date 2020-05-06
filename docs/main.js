@@ -6,7 +6,7 @@ const CORE_LIB_PATH = `${CORE_LIB_BASE}/include/`;
 function joinPath(...parts) {
 	let result = [];
 	for (const part of parts) {
-		for (const subPart of part.split("/").filter(v => v.length > 0)) {
+		for (const subPart of part.split("/").filter((v) => v.length > 0)) {
 			if (subPart == "..") {
 				result.pop();
 			} else {
@@ -19,7 +19,7 @@ function joinPath(...parts) {
 
 function getReferencePaths(input) {
 	const rx = /<reference path="([^"]+)"\s\/>/;
-	return (input.match(new RegExp(rx.source, "g")) || []).map(s => {
+	return (input.match(new RegExp(rx.source, "g")) || []).map((s) => {
 		const match = s.match(rx);
 		if (match && match.length >= 2) {
 			return match[1];
@@ -59,7 +59,7 @@ async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
 
 	let text = "";
 	for (let i = 0; i < 3; i++) {
-		const res = await fetch(url);
+		const res = await fetch(url, { mode: "no-cors" });
 		if (res.status === 404) {
 			console.log(`Failed to load "${fileName}" ( Attempt #${i} )`);
 		} else {
@@ -84,7 +84,7 @@ async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
 	worker.postMessage({
 		type: "library",
 		path: rbxtsPath,
-		source: text
+		source: text,
 	});
 
 	monaco.languages.typescript.typescriptDefaults.addExtraLib(text, monacoPath);
@@ -93,11 +93,7 @@ async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
 }
 
 async function addPackage(packageName, packageTypesUrl) {
-	await addLib(
-		packageTypesUrl,
-		`node_modules/@rbxts/${packageName}/index.d.ts`,
-		`@rbxts/${packageName}/index.d.ts`
-	);
+	await addLib(packageTypesUrl, `node_modules/@rbxts/${packageName}/index.d.ts`, `@rbxts/${packageName}/index.d.ts`);
 }
 
 async function main() {
@@ -117,19 +113,19 @@ async function main() {
 		rootDir: ".",
 
 		jsx: monaco.languages.typescript.JsxEmit.React,
-		jsxFactory: "Roact.createElement"
+		jsxFactory: "Roact.createElement",
 	};
 
 	const sharedEditorOptions = {
 		minimap: { enabled: false },
 		automaticLayout: true,
 		scrollBeyondLastLine: false,
-		theme: "vs-dark"
+		theme: "vs-dark",
 	};
 
 	const State = {
 		inputModel: null,
-		outputModel: null
+		outputModel: null,
 	};
 
 	let inputEditor;
@@ -159,9 +155,9 @@ async function main() {
 			document.querySelector(".spinner").classList.toggle("spinner--hidden", !shouldShow);
 		},
 
-		selectExample: async function(exampleName) {
+		selectExample: async function (exampleName) {
 			try {
-				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}.ts`);
+				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}.ts`, { mode: "no-cors" });
 				let code = await res.text();
 				code = code.replace(/export {\s*};/g, "");
 				UI.shouldUpdateHash = false;
@@ -173,7 +169,7 @@ async function main() {
 			}
 		},
 
-		setCodeFromHash: async function() {
+		setCodeFromHash: async function () {
 			if (location.hash.startsWith("#example")) {
 				const exampleName = location.hash.replace("#example/", "").trim();
 				UI.selectExample(exampleName);
@@ -197,16 +193,16 @@ async function main() {
 				return LZString.decompressFromEncodedURIComponent(code);
 			}
 			UI.selectExample("lava");
-		}
+		},
 	};
 
 	window.MonacoEnvironment = {
-		getWorkerUrl: function(workerId, label) {
+		getWorkerUrl: function (workerId, label) {
 			return `worker.js?version=${window.CONFIG.monacoVersion}`;
-		}
+		},
 	};
 
-	const res = await fetch(`${CORE_LIB_BASE}/package.json`);
+	const res = await fetch(`${CORE_LIB_BASE}/package.json`, { mode: "no-cors" });
 	if (res.status === 200) {
 		console.log("@rbxts/types", JSON.parse(await res.text()).version);
 	}
@@ -232,19 +228,19 @@ async function main() {
 
 	inputEditor = monaco.editor.create(
 		document.getElementById("input"),
-		Object.assign({ model: State.inputModel }, sharedEditorOptions)
+		Object.assign({ model: State.inputModel }, sharedEditorOptions),
 	);
 
 	monaco.editor.create(
 		document.getElementById("output"),
-		Object.assign({ model: State.outputModel, readOnly: true }, sharedEditorOptions)
+		Object.assign({ model: State.outputModel, readOnly: true }, sharedEditorOptions),
 	);
 
 	function updateOutput() {
 		const tsSource = State.inputModel.getValue();
 		worker.postMessage({
 			type: "compile",
-			source: tsSource
+			source: tsSource,
 		});
 
 		if (UI.shouldUpdateHash) {
@@ -252,7 +248,7 @@ async function main() {
 		}
 	}
 
-	worker.addEventListener("message", e => {
+	worker.addEventListener("message", (e) => {
 		State.outputModel.setValue(e.data.source);
 	});
 
@@ -276,20 +272,20 @@ async function main() {
 	// if the focus is outside the editor
 	window.addEventListener(
 		"keydown",
-		event => {
+		(event) => {
 			const S_KEY = 83;
 			if (event.keyCode == S_KEY && (event.metaKey || event.ctrlKey)) {
 				event.preventDefault();
 
 				window.clipboard.writeText(location.href.toString()).then(
 					() => UI.showFlashMessage("URL is copied to the clipboard!"),
-					e => {
+					(e) => {
 						alert(e);
-					}
+					},
 				);
 			}
 		},
-		false
+		false,
 	);
 
 	function prettier() {
@@ -297,8 +293,8 @@ async function main() {
 
 		require([
 			`https://unpkg.com/prettier@${PRETTIER_VERSION}/standalone.js`,
-			`https://unpkg.com/prettier@${PRETTIER_VERSION}/parser-typescript.js`
-		], function(prettier, { parsers }) {
+			`https://unpkg.com/prettier@${PRETTIER_VERSION}/parser-typescript.js`,
+		], function (prettier, { parsers }) {
 			const cursorOffset = State.inputModel.getOffsetAt(inputEditor.getPosition());
 
 			const formatResult = prettier.formatWithCursor(State.inputModel.getValue(), {
@@ -307,7 +303,7 @@ async function main() {
 				tabWidth: 4,
 				useTabs: true,
 				trailingComma: "all",
-				cursorOffset
+				cursorOffset,
 			});
 
 			State.inputModel.setValue(formatResult.formatted);
