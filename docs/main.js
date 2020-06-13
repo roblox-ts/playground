@@ -287,7 +287,7 @@ async function main() {
 	);
 
 	function prettier() {
-		const PRETTIER_VERSION = "1.14.3";
+		const PRETTIER_VERSION = "2.0.5";
 
 		require([
 			`https://cdn.jsdelivr.net/npm/prettier@${PRETTIER_VERSION}/standalone.js`,
