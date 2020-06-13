@@ -3,97 +3,95 @@ const worker = new Worker("bundle.js");
 const CORE_LIB_BASE = "https://cdn.jsdelivr.net/npm/@rbxts/types@latest";
 const CORE_LIB_PATH = `${CORE_LIB_BASE}/include/`;
 
-function joinPath(...parts) {
-	let result = [];
-	for (const part of parts) {
-		for (const subPart of part.split("/").filter((v) => v.length > 0)) {
-			if (subPart == "..") {
-				result.pop();
-			} else {
-				result.push(subPart);
-			}
-		}
-	}
-	return result.join("/");
-}
-
-function getReferencePaths(input) {
-	const rx = /<reference path="([^"]+)"\s\/>/;
-	return (input.match(new RegExp(rx.source, "g")) || []).map((s) => {
-		const match = s.match(rx);
-		if (match && match.length >= 2) {
-			return match[1];
-		} else {
-			throw new Error(`Error parsing: "${s}".`);
-		}
-	});
-}
-
-function basename(url) {
-	const parts = url.split("/");
-	if (parts.length === 0) {
-		throw new Error(`Bad url: "${url}"`);
-	}
-	return parts[parts.length - 1];
-}
-
-function dirname(url) {
-	return url.slice(CORE_LIB_PATH.length, url.length - basename(url).length);
-}
-
 const loaded = new Set();
 
-async function addCoreLib(path) {
-	return addLib(CORE_LIB_PATH + path, basename(path));
+const PATH_SEP = "/";
+
+function pathJoin(...parts) {
+	let result = parts[0];
+	for (let i = 1; i < parts.length; i++) {
+		if (!result.endsWith(PATH_SEP)) {
+			result += PATH_SEP;
+		}
+		result += parts[i];
+	}
+	return result;
 }
 
-async function addLib(url, rbxtsPath, monacoPath = rbxtsPath) {
-	const fileName = basename(rbxtsPath);
-
-	if (loaded.has(url)) {
-		return;
+function pathResolve(path) {
+	const pathParts = path.split(PATH_SEP);
+	const result = [];
+	for (let i = 0; i < pathParts.length; i++) {
+		if (pathParts[i] === ".") continue;
+		if (pathParts[i] === "..") {
+			result.pop();
+			continue;
+		}
+		result.push(pathParts[i]);
 	}
-	loaded.add(url);
+	return result.join(PATH_SEP);
+}
 
-	UI.toggleSpinner(true);
+const JS_DELIVR = "https://cdn.jsdelivr.net/npm/@rbxts";
 
+const PATH_REFERENCE_REGEX = /^\/\/\/ <reference path="([^"]+)" \/>\s*$/gm;
+
+function getMatches(regex, str) {
+	const result = [];
+	for (const match of str.matchAll(regex)) {
+		result.push(match[1]);
+	}
+	return result;
+}
+
+async function urlGet(url) {
 	let text = "";
 	for (let i = 0; i < 3; i++) {
 		const res = await fetch(url);
 		if (res.status === 404) {
-			console.log(`Failed to load "${fileName}" ( Attempt #${i} )`);
+			console.log(`Failed to load "${url}" ( Attempt #${i} )`);
 		} else {
 			text = await res.text();
 			break;
 		}
 	}
-
-	UI.toggleSpinner(false);
-
-	if (rbxtsPath === monacoPath) {
-		// hack?
-		const paths = getReferencePaths(text);
-		if (paths.length > 0) {
-			console.log(`${fileName} depends on ${paths.join(", ")}`);
-			for (const path of paths) {
-				await addCoreLib(joinPath(dirname(url), path));
-			}
-		}
-	}
-
-	worker.postMessage({
-		type: "library",
-		path: rbxtsPath,
-		source: text,
-	});
-
-	monaco.languages.typescript.typescriptDefaults.addExtraLib(text, monacoPath);
-
-	console.log(`Added "${fileName}"`);
+	return text;
 }
 
-async function addPackage(packageName, packageTypesUrl) {
-	await addLib(packageTypesUrl, `node_modules/@rbxts/${packageName}/index.d.ts`, `@rbxts/${packageName}/index.d.ts`);
+async function addFile(fileUrl) {
+	if (!loaded.has(fileUrl)) {
+		loaded.add(fileUrl);
+		const fileContent = await urlGet(fileUrl);
+		for (const match of getMatches(PATH_REFERENCE_REGEX, fileContent)) {
+			await addFile(pathResolve(pathJoin(fileUrl, "..", match)));
+		}
+
+		const partialPath = "@rbxts" + fileUrl.substr(JS_DELIVR.length);
+
+		worker.postMessage({
+			type: "writeFile",
+			filePath: "/node_modules/" + partialPath,
+			content: fileContent,
+		});
+
+		monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, partialPath);
+	}
+}
+
+async function addPackage(packageName) {
+	const packageUrl = pathJoin(JS_DELIVR, packageName);
+	const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
+	const pkgJson = JSON.parse(pkgJsonText);
+
+	worker.postMessage({
+		type: "writeFile",
+		filePath: `/node_modules/@rbxts/${packageName}/package.json`,
+		content: pkgJsonText,
+	});
+
+	const typesUrl = pathJoin(packageUrl, pkgJson.types || pkgJson.typings || "index.d.ts");
+	console.log(pkgJson.name, pkgJson.version);
+	await addFile(typesUrl);
 }
 
 async function main() {
@@ -202,21 +200,21 @@ async function main() {
 		},
 	};
 
-	const res = await fetch(`${CORE_LIB_BASE}/package.json`);
-	if (res.status === 200) {
-		console.log("@rbxts/types", JSON.parse(await res.text()).version);
-	}
+	UI.toggleSpinner(true);
 
-	for (const path of window.CONFIG.extraLibs) {
-		await addCoreLib(path);
-	}
+	await Promise.all([
+		addPackage("types"),
+		addPackage("t"),
+		addPackage("services"),
+		addPackage("validate-tree"),
+		addPackage("yield-for-character"),
+		addPackage("spr"),
+		addPackage("dumpster"),
+		addPackage("baseplate"),
+		addPackage("roact"),
+	]);
 
-	await addPackage("t", "https://cdn.jsdelivr.net/npm/@rbxts/t@latest/lib/t.d.ts");
-	await addPackage("services", "https://cdn.jsdelivr.net/npm/@rbxts/services@latest/index.d.ts");
-	await addPackage("validate-tree", "https://cdn.jsdelivr.net/npm/@rbxts/validate-tree@latest/init.d.ts");
-	await addPackage("yield-for-character", "https://cdn.jsdelivr.net/npm/@rbxts/yield-for-character@latest/init.d.ts");
-	await addPackage("spr", "https://cdn.jsdelivr.net/npm/@rbxts/spr@latest/spr.d.ts");
-	await addPackage("dumpster", "https://cdn.jsdelivr.net/npm/@rbxts/dumpster@latest/Dumpster.d.ts");
+	UI.toggleSpinner(false);
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
 
