@@ -58,23 +58,30 @@ async function urlGet(url) {
 	return text;
 }
 
-async function addFile(fileUrl) {
+async function addFile(packageName, typingsPath, fileUrl) {
 	if (!loaded.has(fileUrl)) {
 		loaded.add(fileUrl);
 		const fileContent = await urlGet(fileUrl);
 		for (const match of getMatches(PATH_REFERENCE_REGEX, fileContent)) {
-			await addFile(pathResolve(pathJoin(fileUrl, "..", match)));
+			await addFile(packageName, typingsPath, pathResolve(pathJoin(fileUrl, "..", match)));
 		}
 
-		const partialPath = "@rbxts" + fileUrl.substr(JS_DELIVR.length);
+		const path = "@rbxts" + fileUrl.substr(JS_DELIVR.length);
 
 		worker.postMessage({
 			type: "writeFile",
-			filePath: "/node_modules/" + partialPath,
+			filePath: "/node_modules/" + path,
 			content: fileContent,
 		});
 
-		monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, partialPath);
+		monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, path);
+
+		if (path === typingsPath) {
+			const fakeTypesPath = `@rbxts/${packageName}/index.d.ts`;
+			if (path !== fakeTypesPath) {
+				monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, fakeTypesPath);
+			}
+		}
 	}
 }
 
@@ -89,9 +96,10 @@ async function addPackage(packageName) {
 		content: pkgJsonText,
 	});
 
-	const typesUrl = pathJoin(packageUrl, pkgJson.types || pkgJson.typings || "index.d.ts");
+	const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
+	const typesUrl = pathJoin(packageUrl, typesRelative);
 	console.log(pkgJson.name, pkgJson.version);
-	await addFile(typesUrl);
+	await addFile(packageName, pathJoin("@rbxts", packageName, typesRelative), typesUrl);
 }
 
 async function main() {
