@@ -62,9 +62,12 @@ async function addFile(packageName, typingsPath, fileUrl) {
 	if (!loaded.has(fileUrl)) {
 		loaded.add(fileUrl);
 		const fileContent = await urlGet(fileUrl);
-		for (const match of getMatches(PATH_REFERENCE_REGEX, fileContent)) {
-			await addFile(packageName, typingsPath, pathResolve(pathJoin(fileUrl, "..", match)));
-		}
+
+		await Promise.all(
+			getMatches(PATH_REFERENCE_REGEX, fileContent).map((match) =>
+				addFile(packageName, typingsPath, pathResolve(pathJoin(fileUrl, "..", match))),
+			),
+		);
 
 		const path = "@rbxts" + fileUrl.substr(JS_DELIVR.length);
 
