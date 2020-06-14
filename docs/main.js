@@ -1,5 +1,6 @@
 const PATH_SEP = "/";
-const JS_DELIVR = "https://cdn.jsdelivr.net/npm/@rbxts";
+const JS_DELIVR = "https://cdn.jsdelivr.net/npm/";
+const SCOPE = "@rbxts";
 const PATH_REFERENCE_REGEX = /^\/\/\/ <reference path="([^"]+)" \/>\s*$/gm;
 
 const worker = new Worker("bundle.js");
@@ -63,7 +64,7 @@ async function addFile(packageName, typingsPath, fileUrl) {
 			),
 		);
 
-		const path = "@rbxts" + fileUrl.substr(JS_DELIVR.length);
+		const path = fileUrl.substr(JS_DELIVR.length);
 
 		worker.postMessage({
 			type: "writeFile",
@@ -74,7 +75,7 @@ async function addFile(packageName, typingsPath, fileUrl) {
 		monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, path);
 
 		if (path === typingsPath) {
-			const fakeTypesPath = `@rbxts/${packageName}/index.d.ts`;
+			const fakeTypesPath = `${SCOPE}/${packageName}/index.d.ts`;
 			if (path !== fakeTypesPath) {
 				monaco.languages.typescript.typescriptDefaults.addExtraLib(fileContent, fakeTypesPath);
 			}
@@ -83,20 +84,20 @@ async function addFile(packageName, typingsPath, fileUrl) {
 }
 
 async function addPackage(packageName) {
-	const packageUrl = pathJoin(JS_DELIVR, packageName);
+	const packageUrl = pathJoin(JS_DELIVR, SCOPE, packageName);
 	const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
 	const pkgJson = JSON.parse(pkgJsonText);
 
 	worker.postMessage({
 		type: "writeFile",
-		filePath: `/node_modules/@rbxts/${packageName}/package.json`,
+		filePath: `/node_modules/${SCOPE}/${packageName}/package.json`,
 		content: pkgJsonText,
 	});
 
 	const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
 	const typesUrl = pathJoin(packageUrl, typesRelative);
 	console.log(pkgJson.name, pkgJson.version);
-	await addFile(packageName, pathJoin("@rbxts", packageName, typesRelative), typesUrl);
+	await addFile(packageName, pathJoin(SCOPE, packageName, typesRelative), typesUrl);
 }
 
 async function main() {
@@ -109,7 +110,7 @@ async function main() {
 		noLib: true,
 		strict: true,
 		target: monaco.languages.typescript.ScriptTarget.ES2015,
-		typeRoots: ["node_modules/@rbxts"],
+		typeRoots: [`node_modules/${SCOPE}`],
 		noEmit: true,
 
 		baseUrl: ".",
