@@ -4,7 +4,7 @@ enum ItemType {
 	A,
 	B,
 	C,
-	D
+	D,
 }
 
 // define a Rojo-esque object tree , which can be validated at run-time
@@ -13,8 +13,8 @@ const ItemScreen = {
 	Configuration: {
 		$className: "Configuration",
 		NumItems: "IntValue",
-		ItemType: { $className: "IntValue" }
-	}
+		ItemType: { $className: "IntValue" },
+	},
 } as const; // preserves the literal type of each member
 
 type ItemScreen = EvaluateInstanceTree<typeof ItemScreen>;
@@ -34,7 +34,7 @@ if (parent && validateTree(parent, ItemScreen)) {
 
 if (parent) {
 	// returns a promise which yields until `parent` matches `ItemScreen`
-	yieldForTree(parent, ItemScreen).then(itemScreen => {
+	yieldForTree(parent, ItemScreen).then((itemScreen) => {
 		++itemScreen.Configuration.NumItems.Value;
 	});
 

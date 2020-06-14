@@ -163,7 +163,7 @@ async function main() {
 
 		selectExample: async function (exampleName) {
 			try {
-				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}.ts`);
+				const res = await fetch(`${window.CONFIG.baseUrl}examples/${exampleName}`);
 				let code = await res.text();
 				code = code.replace(/export {\s*};/g, "");
 				UI.shouldUpdateHash = false;
@@ -198,7 +198,7 @@ async function main() {
 				const code = location.hash.replace("#code/", "").trim();
 				return LZString.decompressFromEncodedURIComponent(code);
 			}
-			UI.selectExample("lava");
+			UI.selectExample("lava.ts");
 		},
 	};
 
