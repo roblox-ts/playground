@@ -212,14 +212,11 @@ async function main() {
 
 	await Promise.all([
 		addPackage("types"),
-		addPackage("t"),
 		addPackage("services"),
+		addPackage("t"),
+		addPackage("roact"),
 		addPackage("validate-tree"),
 		addPackage("yield-for-character"),
-		addPackage("spr"),
-		addPackage("dumpster"),
-		addPackage("baseplate"),
-		addPackage("roact"),
 	]);
 
 	UI.toggleSpinner(false);
