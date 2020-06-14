@@ -19,13 +19,13 @@ function pathJoin(...parts) {
 function pathResolve(path) {
 	const pathParts = path.split(PATH_SEP);
 	const result = [];
-	for (let i = 0; i < pathParts.length; i++) {
-		if (pathParts[i] === ".") continue;
-		if (pathParts[i] === "..") {
+	for (const part of pathParts) {
+		if (part === ".") continue;
+		if (part === "..") {
 			result.pop();
 			continue;
 		}
-		result.push(pathParts[i]);
+		result.push(part);
 	}
 	return result.join(PATH_SEP);
 }
