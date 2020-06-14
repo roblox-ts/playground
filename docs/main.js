@@ -1,8 +1,5 @@
 const worker = new Worker("bundle.js");
 
-const CORE_LIB_BASE = "https://cdn.jsdelivr.net/npm/@rbxts/types@latest";
-const CORE_LIB_PATH = `${CORE_LIB_BASE}/include/`;
-
 const loaded = new Set();
 
 const PATH_SEP = "/";
