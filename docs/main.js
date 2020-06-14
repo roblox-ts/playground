@@ -1,8 +1,9 @@
-const worker = new Worker("bundle.js");
-
-const loaded = new Set();
-
 const PATH_SEP = "/";
+const JS_DELIVR = "https://cdn.jsdelivr.net/npm/@rbxts";
+const PATH_REFERENCE_REGEX = /^\/\/\/ <reference path="([^"]+)" \/>\s*$/gm;
+
+const worker = new Worker("bundle.js");
+const loaded = new Set();
 
 function pathJoin(...parts) {
 	let result = parts[0];
@@ -28,10 +29,6 @@ function pathResolve(path) {
 	}
 	return result.join(PATH_SEP);
 }
-
-const JS_DELIVR = "https://cdn.jsdelivr.net/npm/@rbxts";
-
-const PATH_REFERENCE_REGEX = /^\/\/\/ <reference path="([^"]+)" \/>\s*$/gm;
 
 function getMatches(regex, str) {
 	const result = [];
