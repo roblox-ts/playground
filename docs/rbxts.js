@@ -6,7 +6,7 @@ addEventListener("message", (e) => {
 	if (e.data.type === "compile") {
 		let luaSource;
 		try {
-			luaSource = project.compileSource("export {};\n" + e.data.source);
+			luaSource = project.compileSource(e.data.source + "\nexport {};");
 		} catch (e) {
 			luaSource = e
 				.toString()
