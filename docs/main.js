@@ -7,12 +7,12 @@ const worker = new Worker("bundle.js");
 const loaded = new Set();
 
 function pathJoin(...parts) {
-	let result = parts[ 0 ];
+	let result = parts[0];
 	for (let i = 1; i < parts.length; i++) {
 		if (!result.endsWith(PATH_SEP)) {
 			result += PATH_SEP;
 		}
-		result += parts[ i ];
+		result += parts[i];
 	}
 	return result;
 }
@@ -34,7 +34,7 @@ function pathResolve(path) {
 function getMatches(regex, str) {
 	const result = [];
 	for (const match of str.matchAll(regex)) {
-		result.push(match[ 1 ]);
+		result.push(match[1]);
 	}
 	return result;
 }
@@ -114,7 +114,7 @@ async function main() {
 		noLib: true,
 		strict: true,
 		target: monaco.languages.typescript.ScriptTarget.ES2015,
-		typeRoots: [ `node_modules/${SCOPE}` ],
+		typeRoots: [`node_modules/${SCOPE}`],
 		noEmit: true,
 
 		baseUrl: ".",
