@@ -7,12 +7,12 @@ const worker = new Worker("bundle.js");
 const loaded = new Set();
 
 function pathJoin(...parts) {
-	let result = parts[0];
+	let result = parts[ 0 ];
 	for (let i = 1; i < parts.length; i++) {
 		if (!result.endsWith(PATH_SEP)) {
 			result += PATH_SEP;
 		}
-		result += parts[i];
+		result += parts[ i ];
 	}
 	return result;
 }
@@ -34,7 +34,7 @@ function pathResolve(path) {
 function getMatches(regex, str) {
 	const result = [];
 	for (const match of str.matchAll(regex)) {
-		result.push(match[1]);
+		result.push(match[ 1 ]);
 	}
 	return result;
 }
@@ -83,21 +83,25 @@ async function addFile(packageName, typingsPath, fileUrl) {
 	}
 }
 
+const packages = new Set();
 async function addPackage(packageName) {
-	const packageUrl = pathJoin(JS_DELIVR, SCOPE, packageName);
-	const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
-	const pkgJson = JSON.parse(pkgJsonText);
+	if (!packages.has(packageName)) {
+		packages.add(packageName);
+		const packageUrl = pathJoin(JS_DELIVR, SCOPE, packageName);
+		const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
+		const pkgJson = JSON.parse(pkgJsonText);
 
-	worker.postMessage({
-		type: "writeFile",
-		filePath: `/node_modules/${SCOPE}/${packageName}/package.json`,
-		content: pkgJsonText,
-	});
+		worker.postMessage({
+			type: "writeFile",
+			filePath: pathJoin("node_modules", SCOPE, packageName, "package.json"),
+			content: pkgJsonText,
+		});
 
-	const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
-	const typesUrl = pathJoin(packageUrl, typesRelative);
-	console.log(pkgJson.name, pkgJson.version);
-	await addFile(packageName, pathJoin(SCOPE, packageName, typesRelative), typesUrl);
+		const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
+		const typesUrl = pathJoin(packageUrl, typesRelative);
+		console.log(pkgJson.name, pkgJson.version);
+		await addFile(packageName, pathJoin(SCOPE, packageName, typesRelative), typesUrl);
+	}
 }
 
 async function main() {
@@ -110,7 +114,7 @@ async function main() {
 		noLib: true,
 		strict: true,
 		target: monaco.languages.typescript.ScriptTarget.ES2015,
-		typeRoots: [`node_modules/${SCOPE}`],
+		typeRoots: [ `node_modules/${SCOPE}` ],
 		noEmit: true,
 
 		baseUrl: ".",
@@ -211,7 +215,6 @@ async function main() {
 	await Promise.all([
 		addPackage("types"),
 		addPackage("services"),
-		addPackage("t"),
 		addPackage("roact"),
 		addPackage("validate-tree"),
 		addPackage("yield-for-character"),
@@ -249,6 +252,15 @@ async function main() {
 		}
 	}
 
+	function updatePackages() {
+		const tsSource = State.inputModel.getValue();
+
+		for (const package of tsSource.match(/"@rbxts\/\S+"/g)) {
+			console.log(package, package.slice(8, -1));
+			addPackage(package.slice(8, -1));
+		}
+	}
+
 	worker.addEventListener("message", (e) => {
 		State.outputModel.setValue(e.data.source);
 	});
@@ -263,6 +275,7 @@ async function main() {
 			clearTimeout(timer);
 		}
 		timer = setTimeout(() => {
+			updatePackages();
 			updateOutput();
 		}, 300);
 	});
