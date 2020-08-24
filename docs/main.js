@@ -42,7 +42,7 @@ function getMatches(regex, str) {
 async function urlGet(url) {
 	let text = "";
 	for (let i = 0; i < 3; i++) {
-		let res = await fetch(url);
+		const res = await fetch(url);
 		if (res.status === 404) {
 			break;
 		} else if (res.status !== 200) {
