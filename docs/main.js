@@ -44,6 +44,8 @@ async function urlGet(url) {
 	for (let i = 0; i < 3; i++) {
 		const res = await fetch(url);
 		if (res.status === 404) {
+			break;
+		} else if (res.status !== 200) {
 			console.log(`Failed to load "${url}" ( Attempt #${i} )`);
 		} else {
 			text = await res.text();
@@ -81,23 +83,6 @@ async function addFile(packageName, typingsPath, fileUrl) {
 			}
 		}
 	}
-}
-
-async function addPackage(packageName) {
-	const packageUrl = pathJoin(JS_DELIVR, SCOPE, packageName);
-	const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
-	const pkgJson = JSON.parse(pkgJsonText);
-
-	worker.postMessage({
-		type: "writeFile",
-		filePath: `/node_modules/${SCOPE}/${packageName}/package.json`,
-		content: pkgJsonText,
-	});
-
-	const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
-	const typesUrl = pathJoin(packageUrl, typesRelative);
-	console.log(pkgJson.name, pkgJson.version);
-	await addFile(packageName, pathJoin(SCOPE, packageName, typesRelative), typesUrl);
 }
 
 async function main() {
@@ -206,17 +191,31 @@ async function main() {
 		},
 	};
 
+	const packages = new Set();
+	async function addPackage(packageName) {
+		if (!packages.has(packageName)) {
+			packages.add(packageName);
+			const packageUrl = pathJoin(JS_DELIVR, SCOPE, packageName);
+			const pkgJsonText = await urlGet(pathJoin(packageUrl, "package.json"));
+			if (pkgJsonText === "") return;
+
+			const pkgJson = JSON.parse(pkgJsonText);
+
+			worker.postMessage({
+				type: "writeFile",
+				filePath: pathJoin("node_modules", SCOPE, packageName, "package.json"),
+				content: pkgJsonText,
+			});
+
+			const typesRelative = pkgJson.types || pkgJson.typings || "index.d.ts";
+			const typesUrl = pathJoin(packageUrl, typesRelative);
+			console.log(pkgJson.name, pkgJson.version);
+			await addFile(packageName, pathJoin(SCOPE, packageName, typesRelative), typesUrl);
+		}
+	}
+
 	UI.toggleSpinner(true);
-
-	await Promise.all([
-		addPackage("types"),
-		addPackage("services"),
-		addPackage("t"),
-		addPackage("roact"),
-		addPackage("validate-tree"),
-		addPackage("yield-for-character"),
-	]);
-
+	await addPackage("types");
 	UI.toggleSpinner(false);
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
@@ -249,12 +248,22 @@ async function main() {
 		}
 	}
 
+	async function updatePackages() {
+		const packages = State.inputModel.getValue().match(/["']@rbxts\/[^"']+["']/g);
+		if (packages) {
+			for (const package of packages) {
+				await addPackage(package.slice(8, -1));
+			}
+		}
+	}
+
 	worker.addEventListener("message", (e) => {
 		State.outputModel.setValue(e.data.source);
 	});
 
 	UI.setCodeFromHash();
 
+	await updatePackages();
 	updateOutput();
 
 	let timer;
@@ -262,7 +271,8 @@ async function main() {
 		if (timer !== undefined) {
 			clearTimeout(timer);
 		}
-		timer = setTimeout(() => {
+		timer = setTimeout(async () => {
+			await updatePackages();
 			updateOutput();
 		}, 300);
 	});
