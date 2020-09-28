@@ -12,13 +12,12 @@
 		<!-- <script src="bundle.js"></script> -->
 		<script src="https://cdn.jsdelivr.net/npm/url-search-params@1.1.0/build/url-search-params.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/clipboard-polyfill@2.4.7/build/clipboard-polyfill.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.15.6/min/vs/loader.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.20.0/min/vs/loader.js"></script>
 		<script>
 			const params = new URLSearchParams(location.search);
 
 			window.CONFIG = {
-				monacoVersion: "0.18.1",
-				extraLibs: [ "roblox.d.ts" ],
+				monacoVersion: "0.20.0",
 				baseUrl: location.protocol + "//" + location.host + location.pathname,
 			};
 
@@ -54,9 +53,10 @@
 					<p class="popup-header">Examples</p>
 					<div class="popup" style="min-width: 20em;">
 						<ul>
-							<li class="button" data-example="lava">Lava</li>
-							<li class="button" data-example="validateTree">Validate Tree</li>
-							<li class="button" data-example="character">Character</li>
+							<li class="button" data-example="lava.ts">Lava</li>
+							<li class="button" data-example="validateTree.ts">Validate Tree</li>
+							<li class="button" data-example="character.ts">Character</li>
+							<li class="button" data-example="roact.tsx">Roact JSX</li>
 						</ul>
 					</div>
 				</div>
