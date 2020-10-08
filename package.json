@@ -1,7 +1,7 @@
 {
-  "name": "typescript-play",
+  "name": "roblox-ts-playground",
   "version": "0.0.1",
-  "description": "Better TypeScript playground",
+  "description": "roblox-ts playground",
   "main": "main.js",
   "scripts": {
     "start": "serve ./docs",
