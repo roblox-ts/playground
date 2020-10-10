@@ -216,6 +216,7 @@ async function main() {
 
 	UI.toggleSpinner(true);
 	await addPackage("types");
+	await addPackage("compiler-types");
 	UI.toggleSpinner(false);
 
 	monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions);
