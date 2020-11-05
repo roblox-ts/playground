@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
 	target: "web",
@@ -9,24 +10,30 @@ module.exports = {
 		filename: "bundle.js",
 		path: path.join(__dirname, "docs")
 	},
-	node: {
-		fs: "empty",
-		module: "empty",
+	plugins: [
+		new webpack.ProvidePlugin({ process: ["process"] }),
+	],
+	resolve: {
+		fallback: {
+			path: require.resolve("path-browserify"),
+			os: require.resolve("os-browserify/browser"),
+		},
 	},
 	externals: {
+		fs: "{}",
+		module: "{}",
 		worker_threads: "{}",
 		"cross-spawn": "{}",
 		"fs-extra": "{}",
 		chokidar: "{}",
 		klaw: "{}",
-		luamin: "{}",
 		net: "{}",
 		tls: "{}",
 		yargs: "{}",
 		"@microsoft/typescript-etw": "new Proxy({}, { get: () => () => {} })",
 		"universal-analytics": "{}",
-		uuid: "{}"
+		uuid: "{}",
 	},
 	performance: { hints: false },
-	mode: "production"
+	mode: "production",
 };
