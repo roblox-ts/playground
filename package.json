@@ -15,7 +15,7 @@
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
-    "roblox-ts": "^1.0.0-beta.6",
+    "roblox-ts": "^1.0.0-beta.8",
     "serve": "^11.3.2"
   },
   "devDependencies": {
